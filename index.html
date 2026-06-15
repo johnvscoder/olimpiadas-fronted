@@ -23,9 +23,9 @@
             border-radius: 12px;
             box-shadow: 0 4px 15px rgba(0,0,0,0.05);
             box-sizing: border-box;
-            margin-top: 40px;
+            margin-top: 20px;
         }
-        h1, h2 {
+        h1, h2, h3 {
             color: #1e3a8a;
             text-align: center;
             margin-top: 0;
@@ -37,13 +37,18 @@
             flex-direction: column;
             gap: 15px;
         }
-        input {
+        input, textarea {
             padding: 12px;
             font-size: 16px;
             border: 1px solid #cbd5e1;
             border-radius: 8px;
             width: 100%;
             box-sizing: border-box;
+        }
+        textarea {
+            resize: vertical;
+            min-height: 100px;
+            font-family: inherit;
         }
         button {
             background-color: #2563eb;
@@ -60,13 +65,17 @@
         button:hover {
             background-color: #1d4ed8;
         }
-        /* 📜 ESTILOS NUEVOS PARA LA LISTA DE TEMAS */
-        .lista-temas {
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-            margin-top: 20px;
+        .btn-secundario {
+            background-color: #64748b;
+            margin-bottom: 15px;
+            width: auto;
+            padding: 8px 16px;
+            font-size: 14px;
         }
+        .btn-secundario:hover { background-color: #475569; }
+
+        /* Lista de Temas */
+        .lista-temas { display: flex; flex-direction: column; gap: 15px; margin-top: 20px; }
         .tema-card {
             background: #f8fafc;
             border: 1px solid #e2e8f0;
@@ -78,27 +87,47 @@
             justify-content: space-between;
             align-items: center;
         }
-        .tema-card:hover {
-            border-color: #2563eb;
-            background: #f0fdf4;
-            transform: translateX(5px);
+        .tema-card:hover { border-color: #2563eb; background: #f0fdf4; transform: translateX(5px); }
+        .tema-info h3 { margin: 0 0 5px 0; text-align: left; }
+        .tema-info span { font-size: 13px; color: #64748b; background: #e2e8f0; padding: 2px 8px; border-radius: 12px; }
+        
+        /* 🎯 ESTILOS NUEVOS: Pantalla del Tutor e Indicador de Nivel */
+        .header-tutor {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid #e2e8f0;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
         }
-        .tema-info h3 {
-            margin: 0 0 5px 0;
-            color: #1e3a8a;
-        }
-        .tema-info span {
-            font-size: 13px;
-            color: #64748b;
-            background: #e2e8f0;
-            padding: 2px 8px;
-            border-radius: 12px;
-        }
-        .flecha {
-            color: #2563eb;
+        .badge-nivel {
+            background-color: #10b981;
+            color: white;
+            padding: 5px 15px;
+            border-radius: 20px;
             font-weight: bold;
-            font-size: 18px;
+            font-size: 14px;
         }
+        .pizarra {
+            padding: 20px;
+            background-color: #f8fafc;
+            border-left: 5px solid #2563eb;
+            border-radius: 4px;
+            min-height: 200px;
+            white-space: pre-line;
+            font-size: 16px;
+            line-height: 1.6;
+            margin-bottom: 25px;
+        }
+        .zona-respuesta {
+            background-color: #f1f5f9;
+            padding: 20px;
+            border-radius: 8px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        .loading { color: #64748b; font-style: italic; text-align: center; }
         .oculto { display: none !important; }
     </style>
 </head>
@@ -118,22 +147,55 @@
     <div id="pantallaPrincipal" class="container oculto">
         <h1>🏆 Panel de Entrenamiento Olímpico</h1>
         <p style="text-align: center; color: #64748b;">Selecciona el tema de matemáticas que deseas entrenar hoy:</p>
-        
         <div id="contenedorTemas" class="lista-temas">
             <p class="loading">Cargando temas disponibles...</p>
+        </div>
+    </div>
+
+    <div id="pantallaTutor" class="container oculto">
+        <button id="btnVolver" class="button btn-secundario">← Volver a Temas</button>
+        
+        <div class="header-tutor">
+            <h2 id="lblNombreTema" style="margin: 0; text-align: left;">Tema de Olimpiada</h2>
+            <div id="lblNivel" class="badge-nivel">Nivel 0 / 10</div>
+        </div>
+
+        <div id="pizarraTutor" class="pizarra">
+            <p class="loading">Cargando lección del Tutor de IA...</p>
+        </div>
+
+        <div class="zona-respuesta">
+            <label for="txtRespuesta" style="font-weight: bold; color: #1e3a8a;">✍️ Escribe tu solución detallada aquí:</label>
+            <textarea id="txtRespuesta" placeholder="Explica tu razonamiento paso a paso y escribe tu respuesta final..."></textarea>
+            <button id="btnEnviarRespuesta">Enviar Solución al Tutor</button>
         </div>
     </div>
 
     <script>
         const BACKEND_URL = 'https://olimpiadas-backend.onrender.com';
 
+        // Variables de Control de Estado del Alumno (Temporales en Frontend)
+        let temaSeleccionadoId = '';
+        let nivelActual = 0;
+
+        // Elementos de la interfaz
         const pantallaLogin = document.getElementById('pantallaLogin');
         const pantallaPrincipal = document.getElementById('pantallaPrincipal');
+        const pantallaTutor = document.getElementById('pantallaTutor');
+        
         const btnLogin = document.getElementById('btnLogin');
         const txtUsuario = document.getElementById('txtUsuario');
         const txtContrasena = document.getElementById('txtContrasena');
         const lblError = document.getElementById('lblError');
         const contenedorTemas = document.getElementById('contenedorTemas');
+
+        // Nuevos elementos del tutor
+        const btnVolver = document.getElementById('btnVolver');
+        const lblNombreTema = document.getElementById('lblNombreTema');
+        const lblNivel = document.getElementById('lblNivel');
+        const pizarraTutor = document.getElementById('pizarraTutor');
+        const txtRespuesta = document.getElementById('txtRespuesta');
+        const btnEnviarRespuesta = document.getElementById('btnEnviarRespuesta');
 
         // Lógica del Login
         btnLogin.addEventListener('click', async () => {
@@ -149,7 +211,6 @@
                 if (resultado.exito) {
                     pantallaLogin.classList.add('oculto');
                     pantallaPrincipal.classList.remove('oculto');
-                    // 🔥 Cuando se loguea con éxito, mandamos a llamar los temas:
                     cargarTemas();
                 } else {
                     lblError.textContent = resultado.mensaje;
@@ -159,16 +220,14 @@
             }
         });
 
-        // 📋 FUNCIÓN NUEVA: Traer los temas desde el Backend y pintarlos
+        // Cargar temas del backend
         async function cargarTemas() {
             try {
                 const respuesta = await fetch(`${BACKEND_URL}/api/temas`);
                 const temas = await respuesta.json();
-                
-                contenedorTemas.innerHTML = ""; // Limpiar el texto de carga
+                contenedorTemas.innerHTML = "";
 
                 temas.forEach(tema => {
-                    // Creamos el diseño de la tarjeta para cada tema
                     const card = document.createElement('div');
                     card.className = 'tema-card';
                     card.innerHTML = `
@@ -179,18 +238,59 @@
                         <div class="flecha">Entrar →</div>
                     `;
                     
-                    // Evento momentáneo: por ahora solo avisará cuál elegiste
+                    // ACCIÓN DEL CLIC: Ir a la pantalla del tutor
                     card.addEventListener('click', () => {
-                        alert(`¡Primer paso completado! Elegiste: ${tema.nombre}. En el siguiente paso crearemos su pantalla de tutoría.`);
+                        activarPantallaTutor(tema.id, tema.nombre);
                     });
 
                     contenedorTemas.appendChild(card);
                 });
-
             } catch (error) {
                 contenedorTemas.innerHTML = "<p style='color:red;'>Error al cargar los temas.</p>";
             }
         }
+
+        // 🔄 FUNCIÓN NUEVA: Intercambio de pantalla hacia el Tutor
+        function activarPantallaTutor(idTema, nombreTema) {
+            temaSeleccionadoId = idTema;
+            nivelActual = 0; // Por ahora empezamos en cero cada vez
+
+            // Actualizar textos informativos
+            lblNombreTema.textContent = nombreTema;
+            lblNivel.textContent = `Nivel ${nivelActual} / 10`;
+            pizarraTutor.innerHTML = `<p class="loading">⏳ El tutor de IA está preparando el material de nivel ${nivelActual} sobre "${nombreTema}"...</p>`;
+            txtRespuesta.value = ""; // Limpiar cuadro de texto
+
+            // Cambiar visibilidad de pantallas
+            pantallaPrincipal.classList.add('oculto');
+            pantallaTutor.classList.remove('oculto');
+
+            // Llamada provisional: Usamos tu ruta vieja de Gemini por ahora
+            consultarTutorIA();
+        }
+
+        // Botón Volver
+        btnVolver.addEventListener('click', () => {
+            pantallaTutor.classList.add('oculto');
+            pantallaPrincipal.classList.remove('oculto');
+        });
+
+        // Consultar contenido inicial de la IA
+        async function consultarTutorIA() {
+            try {
+                // Por ahora consulta la ruta fija; en el paso 3 le enviaremos el ID del tema y el nivel.
+                const respuesta = await fetch(`${BACKEND_URL}/api/generar-tema`);
+                const datos = await respuesta.json();
+                pizarraTutor.textContent = datos.teoria;
+            } catch (error) {
+                pizarraTutor.innerHTML = "<p style='color:red;'>❌ Error al conectar con el Tutor de IA.</p>";
+            }
+        }
+
+        // Evento provisional para el botón de enviar respuesta
+        btnEnviarRespuesta.addEventListener('click', () => {
+            alert(`¡Excelente! Escribiste: "${txtRespuesta.value}". En el paso 4 haremos que el tutor evalúe tu respuesta en tiempo real.`);
+        });
     </script>
 </body>
 </html>
