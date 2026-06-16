@@ -303,55 +303,10 @@
             }
         }
 
-        // 🚀 EVALUACIÓN REAL: Enviar la solución del alumno al servidor
-        btnEnviarRespuesta.addEventListener('click', async () => {
-            const respuestaAlumno = txtRespuesta.value.trim();
-
-            if (!respuestaAlumno) {
-                alert("⚠️ Por favor, escribe tu solución antes de enviarla.");
-                return;
-            }
-
-            // Bloquear interfaz visual mientras la IA piensa
-            btnEnviarRespuesta.disabled = true;
-            btnEnviarRespuesta.textContent = "⏳ El Tutor está evaluando tu lógica...";
-            pizarraTutor.innerHTML = `<p class="loading">🧠 El Tutor de IA está analizando tu procedimiento matemático paso a paso...</p>`;
-
-            try {
-                const respuesta = await fetch(`${BACKEND_URL}/api/tutor/evaluar`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        temaId: temaSeleccionadoId,
-                        nivel: nivelActual,
-                        respuestaAlumno: respuestaAlumno
-                    })
-                });
-
-                const resultado = await respuesta.json();
-
-                // Mostrar la corrección del tutor en una alerta o cuadro de diálogo elegante
-                alert(`📢 EVALUACIÓN DEL TUTOR:\n\n${resultado.retroalimentacion}\n\nResultado: ¡Se decidió ${resultado.decision}!`);
-
-                // Actualizar el estado del nivel con la decisión del servidor
-                nivelActual = resultado.nuevoNivel;
-                lblNivel.textContent = `Nivel ${nivelActual} / 10`;
-
-                // Limpiar el campo de texto y cargar la nueva lección/reto del nuevo nivel
-                txtRespuesta.value = "";
-                pizarraTutor.innerHTML = `<p class="loading">🔄 Cargando material adaptado para el Nivel ${nivelActual}...</p>`;
-                consultarTutorIA();
-
-            } catch (error) {
-                console.error(error);
-                alert("❌ Ocurrió un error al enviar la solución.");
-            } finally {
-                // Desbloquear botón
-                btnEnviarRespuesta.disabled = false;
-                btnEnviarRespuesta.textContent = "Enviar Solución al Tutor";
-            }
+        // Evento provisional para el botón de enviar respuesta
+        btnEnviarRespuesta.addEventListener('click', () => {
+            alert(`¡Excelente! Escribiste: "${txtRespuesta.value}". En el paso 4 haremos que el tutor evalúe tu respuesta en tiempo real.`);
         });
-
     </script>
 </body>
 </html>
