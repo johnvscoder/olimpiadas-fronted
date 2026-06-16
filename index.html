@@ -275,15 +275,31 @@
             pantallaPrincipal.classList.remove('oculto');
         });
 
-        // Consultar contenido inicial de la IA
+        // 🤖 ACTUALIZADO: Consultar contenido de la IA adaptado al Tema y Nivel actual
         async function consultarTutorIA() {
             try {
-                // Por ahora consulta la ruta fija; en el paso 3 le enviaremos el ID del tema y el nivel.
-                const respuesta = await fetch(`${BACKEND_URL}/api/generar-tema`);
+                const respuesta = await fetch(`${BACKEND_URL}/api/tutor/clase`, {
+                    method: 'POST',
+                    headers: { 
+                        'Content-Type': 'application/json' 
+                    },
+                    body: JSON.stringify({
+                        temaId: temaSeleccionadoId,
+                        nivel: nivelActual
+                    })
+                });
+                
                 const datos = await respuesta.json();
-                pizarraTutor.textContent = datos.teoria;
+
+                if (datos.contenido) {
+                    // Usamos textContent para mantener los saltos de línea limpios
+                    pizarraTutor.textContent = datos.contenido;
+                } else {
+                    pizarraTutor.innerHTML = "<p style='color:red;'>❌ No se recibió contenido estructurado del Tutor.</p>";
+                }
             } catch (error) {
-                pizarraTutor.innerHTML = "<p style='color:red;'>❌ Error al conectar con el Tutor de IA.</p>";
+                console.error(error);
+                pizarraTutor.innerHTML = "<p style='color:red;'>❌ Error al conectar con el Tutor de IA. Intenta de nuevo en unos segundos.</p>";
             }
         }
 
