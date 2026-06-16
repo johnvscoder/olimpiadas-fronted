@@ -303,12 +303,9 @@
             }
         }
 
-
-        // 🚀 EVALUACIÓN CORREGIDA: Enviar la solución Y el problema planteado al servidor
+        // 🚀 EVALUACIÓN REAL: Enviar la solución del alumno al servidor
         btnEnviarRespuesta.addEventListener('click', async () => {
             const respuestaAlumno = txtRespuesta.value.trim();
-            // 🔥 CAPTURAMOS EL PROBLEMA: Extraemos el texto actual de la pizarra para que la IA sepa qué evaluar
-            const problemaPlanteado = pizarraTutor.textContent; 
 
             if (!respuestaAlumno) {
                 alert("⚠️ Por favor, escribe tu solución antes de enviarla.");
@@ -327,21 +324,20 @@
                     body: JSON.stringify({
                         temaId: temaSeleccionadoId,
                         nivel: nivelActual,
-                        problemaContexto: problemaPlanteado, // 🔥 Enviamos el problema aquí
                         respuestaAlumno: respuestaAlumno
                     })
                 });
 
                 const resultado = await respuesta.json();
 
-                // Mostrar la corrección del tutor
+                // Mostrar la corrección del tutor en una alerta o cuadro de diálogo elegante
                 alert(`📢 EVALUACIÓN DEL TUTOR:\n\n${resultado.retroalimentacion}\n\nResultado: ¡Se decidió ${resultado.decision}!`);
 
-                // Actualizar el estado del nivel
+                // Actualizar el estado del nivel con la decisión del servidor
                 nivelActual = resultado.nuevoNivel;
                 lblNivel.textContent = `Nivel ${nivelActual} / 10`;
 
-                // Limpiar el campo de texto y cargar la nueva lección
+                // Limpiar el campo de texto y cargar la nueva lección/reto del nuevo nivel
                 txtRespuesta.value = "";
                 pizarraTutor.innerHTML = `<p class="loading">🔄 Cargando material adaptado para el Nivel ${nivelActual}...</p>`;
                 consultarTutorIA();
@@ -350,11 +346,11 @@
                 console.error(error);
                 alert("❌ Ocurrió un error al enviar la solución.");
             } finally {
+                // Desbloquear botón
                 btnEnviarRespuesta.disabled = false;
                 btnEnviarRespuesta.textContent = "Enviar Solución al Tutor";
             }
         });
-
 
     </script>
 </body>
