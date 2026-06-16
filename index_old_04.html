@@ -279,10 +279,11 @@
         // Consultar contenido de la IA adaptado al Tema y Nivel actual
         async function consultarTutorIA() {
             try {
-                // Hacemos una petición POST enviando los datos del alumno en formato JSON
                 const respuesta = await fetch(`${BACKEND_URL}/api/tutor/clase`, {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: { 
+                        'Content-Type': 'application/json' 
+                    },
                     body: JSON.stringify({
                         temaId: temaSeleccionadoId,
                         nivel: nivelActual
@@ -298,7 +299,7 @@
                 }
             } catch (error) {
                 console.error(error);
-                pizarraTutor.innerHTML = "<p style='color:red;'>❌ Error al conectar con el Tutor de IA.</p>";
+                pizarraTutor.innerHTML = "<p style='color:red;'>❌ Error al conectar con el Tutor de IA o el servidor está despertando. Intenta de nuevo en unos segundos.</p>";
             }
         }
 
