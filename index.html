@@ -327,7 +327,7 @@
             pantallaPrincipal.classList.remove('oculto');
         });
 
-        // 🤖 ACTUALIZADO CON STREAMING Y MARKDOWN: Lee fragmento por fragmento y lo formatea
+        // 🤖 ACTUALIZADO CON VELOCIDAD SUAVE (MÁQUINA DE ESCRIBIR) Y MARKDOWN
         async function consultarTutorIA() {
             try {
                 const respuesta = await fetch(`${BACKEND_URL}/api/tutor/clase`, {
@@ -341,56 +341,73 @@
                     })
                 });
 
-                // Verificamos si la petición fue exitosa antes de procesar el stream
-                if (!respuesta.ok) {
-                    throw new Error("Error en la respuesta del servidor");
-                }
+                if (!respuesta.ok) throw new Error("Error en la respuesta del servidor");
 
-                // 🌊 Conectamos con el flujo de datos (Stream)
                 const reader = respuesta.body.getReader();
                 const decoder = new TextDecoder();
 
-                // Limpiamos la pizarra para empezar a escribir desde cero
                 pizarraTutor.innerHTML = "";
-                let textoAcumulado = "";
 
-                // Bucle infinito que lee los fragmentos conforme van llegando
+                let textoRecibidoCompleto = ""; // Guarda todo lo que llega de la IA
+                let textoRenderizadoActual = ""; // Lo que se ha mostrado en pantalla hasta el momento
+                let indiceEfecto = 0; // Marcador de posición para el retraso
+
+                // ⏱️ CONFIGURACIÓN DE VELOCIDAD
+                // Menos milisegundos = Más rápido. 15ms a 25ms suele dar el efecto más estético.
+                const VELOCIDAD_MS = 20;
+
+                // Este intervalo se encarga de ir imprimiendo el texto letra por letra de forma constante
+                const intervaloEscritura = setInterval(() => {
+                    // Si ya imprimimos todo lo que ha llegado hasta el momento
+                    if (indiceEfecto >= textoRecibidoCompleto.length) {
+                        // Si el lector de internet ya terminó por completo, limpiamos el timer
+                        if (window.streamTerminado) {
+                            clearInterval(intervaloEscritura);
+                        }
+                        return; // Esperamos en el siguiente ciclo a que llegue más internet
+                    }
+
+                    // Agregamos el siguiente carácter disponible en la cola
+                    textoRenderizadoActual += textoRecibidoCompleto[indiceEfecto];
+                    indiceEfecto++;
+
+                    // Renderizamos en la pizarra convirtiendo a Markdown en tiempo real
+                    pizarraTutor.innerHTML = marked.parse(textoRenderizadoActual);
+                }, VELOCIDAD_MS);
+
+                // Control de estado para avisar al intervalo que el flujo de red terminó
+                window.streamTerminado = false;
+
+                // Bucle que lee la red a máxima velocidad y la acumula en el buffer de espera
                 while (true) {
                     const { value, done } = await reader.read();
-                    if (done) break; // El canal de internet se cerró por completo
+                    if (done) break;
 
-                    // Decodificamos el paquete de bytes que llegó a texto crudo
                     const chunkTexto = decoder.decode(value, { stream: true });
-
-                    // Los datos de tipo Server-Sent Events (SSE) llegan en líneas que empiezan con "data: "
                     const lineas = chunkTexto.split('\n');
 
                     for (const linea of lineas) {
                         const lineaLimpia = linea.trim();
-
-                        if (!lineaLimpia) continue;
-                        if (lineaLimpia === 'data: [DONE]') break; // Señal final de nuestro backend
+                        if (!lineaLimpia || lineaLimpia === 'data: [DONE]') continue;
 
                         if (lineaLimpia.startsWith('data: ')) {
                             try {
-                                // Extraemos el JSON del interior de la línea de datos
                                 const jsonString = lineaLimpia.slice(6);
                                 const objetoData = JSON.parse(jsonString);
 
                                 if (objetoData.texto) {
-                                    // 1. Acumulamos el nuevo pedazo de texto recibido
-                                    textoAcumulado += objetoData.texto;
-
-                                    // 2. Convertimos TODO el texto acumulado a Markdown formateado y lo pintamos
-                                    pizarraTutor.innerHTML = marked.parse(textoAcumulado);
+                                    // En lugar de renderizar aquí de golpe, lo acumulamos en la cola de impresión
+                                    textoRecibidoCompleto += objetoData.texto;
                                 }
                             } catch (err) {
-                                // Consumimos silenciosamente errores parciales de paquetes cortados por milisegundos
-                                console.warn("Paquete SSE incompleto momentáneamente", err);
+                                console.warn("Paquete fragmentado recibido de forma asíncrona");
                             }
                         }
                     }
                 }
+
+                // Cuando el bucle del fetch termina por completo, le avisamos al intervalo
+                window.streamTerminado = true;
 
             } catch (error) {
                 console.error(error);
