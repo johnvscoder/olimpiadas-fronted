@@ -177,6 +177,49 @@
         .oculto {
             display: none !important;
         }
+
+        /* 📝 ESTILOS PARA LA NUEVA PIZARRA DE EVALUACIÓN */
+        .pizarra-evaluacion {
+            margin-top: 25px;
+            padding: 20px;
+            background-color: #ffffff;
+            border: 2px dashed #cbd5e1;
+            border-radius: 8px;
+            min-height: 100px;
+        }
+
+        .pizarra-evaluacion h3 {
+            text-align: left;
+            margin-bottom: 10px;
+            color: #1e3a8a;
+        }
+
+        .resultado-box {
+            display: inline-block;
+            padding: 6px 16px;
+            border-radius: 20px;
+            font-weight: bold;
+            margin-top: 15px;
+            font-size: 14px;
+        }
+
+        .decision-subir {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #10b981;
+        }
+
+        .decision-mantener {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #f59e0b;
+        }
+
+        .decision-bajar {
+            background-color: #fee2e2;
+            color: #991b1b;
+            border: 1px solid #ef4444;
+        }
     </style>
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 </head>
@@ -212,6 +255,12 @@
 
         <div id="pizarraTutor" class="pizarra">
             <p class="loading">Cargando lección del Tutor de IA...</p>
+        </div>
+
+        <div id="contenedorEvaluacion" class="pizarra-evaluacion oculto">
+            <h3>📝 Corrección del Tutor de IA</h3>
+            <div id="textoEvaluacion" style="line-height: 1.6; font-size: 15px;"></div>
+            <div id="badgeResultado" class="resultado-box"></div>
         </div>
 
         <div class="zona-respuesta">
@@ -416,10 +465,9 @@
         }
 
 
-        // 🚀 EVALUACIÓN CORREGIDA: Enviar la solución Y el problema planteado al servidor
+        // 🚀 EVALUACIÓN INTEGRADA CON STREAMING Y CONTROL DE VELOCIDAD SUAVE
         btnEnviarRespuesta.addEventListener('click', async () => {
             const respuestaAlumno = txtRespuesta.value.trim();
-            // 🔥 CAPTURAMOS EL PROBLEMA: Extraemos el texto actual de la pizarra para que la IA sepa qué evaluar
             const problemaPlanteado = pizarraTutor.textContent;
 
             if (!respuestaAlumno) {
@@ -427,10 +475,20 @@
                 return;
             }
 
-            // Bloquear interfaz visual mientras la IA piensa
+            // 1. Capturamos los elementos de la nueva pizarra de evaluación
+            const contenedorEvaluacion = document.getElementById('contenedorEvaluacion');
+            const textoEvaluacion = document.getElementById('textoEvaluacion');
+            const badgeResultado = document.getElementById('badgeResultado');
+
+            // 2. Bloqueamos el botón y limpiamos estados previos
             btnEnviarRespuesta.disabled = true;
             btnEnviarRespuesta.textContent = "⏳ El Tutor está evaluando tu lógica...";
-            pizarraTutor.innerHTML = `<p class="loading">🧠 El Tutor de IA está analizando tu procedimiento matemático paso a paso...</p>`;
+
+            // Mostramos la pizarra de evaluación vacía para dar la sensación de carga
+            contenedorEvaluacion.classList.remove('oculto');
+            textoEvaluacion.innerHTML = `<p class="loading">🧠 El Tutor de IA está analizando tu procedimiento matemático paso a paso...</p>`;
+            badgeResultado.className = "resultado-box oculto";
+            badgeResultado.textContent = "";
 
             try {
                 const respuesta = await fetch(`${BACKEND_URL}/api/tutor/evaluar`, {
@@ -439,31 +497,115 @@
                     body: JSON.stringify({
                         temaId: temaSeleccionadoId,
                         nivel: nivelActual,
-                        problemaContexto: problemaPlanteado, // 🔥 Enviamos el problema aquí
+                        problemaContexto: problemaPlanteado,
                         respuestaAlumno: respuestaAlumno
                     })
                 });
 
-                const resultado = await respuesta.json();
+                if (!respuesta.ok) throw new Error("Error en la respuesta del servidor");
 
-                // Mostrar la corrección del tutor
-                alert(`📢 EVALUACIÓN DEL TUTOR:\n\n${resultado.retroalimentacion}\n\nResultado: ¡Se decidió ${resultado.decision}!`);
+                const reader = respuesta.body.getReader();
+                const decoder = new TextDecoder();
 
-                // Actualizar el estado del nivel
-                nivelActual = resultado.nuevoNivel;
-                lblNivel.textContent = `Nivel ${nivelActual} / 10`;
+                // Limpiamos el texto de carga de la pizarra antes de que empiece a escribir
+                textoEvaluacion.innerHTML = "";
 
-                // Limpiar el campo de texto y cargar la nueva lección
-                txtRespuesta.value = "";
-                pizarraTutor.innerHTML = `<p class="loading">🔄 Cargando material adaptado para el Nivel ${nivelActual}...</p>`;
-                consultarTutorIA();
+                let textoRecibidoCompleto = ""; // Almacén de red
+                let textoRenderizadoActual = ""; // Almacén visual
+                let indiceEfecto = 0;
+
+                let datosFinalesControl = null; // Guardará el veredicto cuando llegue del servidor
+                window.evalTerminado = false;
+
+                // ⏱️ INTERVALO DE ESCRITURA SUAVE (Velocidad: 20ms por carácter)
+                const intervaloEscrituraEval = setInterval(() => {
+                    if (indiceEfecto >= textoRecibidoCompleto.length) {
+                        if (window.evalTerminado) {
+                            clearInterval(intervaloEscrituraEval);
+
+                            // 🎯 FASE FINAL: Cuando termina de escribir la crítica, procesamos el veredicto
+                            if (datosFinalesControl) {
+                                const decision = datosFinalesControl.decision;
+                                nivelActual = datosFinalesControl.nuevoNivel;
+
+                                // Actualizamos el indicador de nivel principal arriba en la pantalla
+                                lblNivel.textContent = `Nivel ${nivelActual} / 10`;
+
+                                // Dibuja el badge decorativo abajo de la corrección
+                                badgeResultado.textContent = `¡VEREDICTO: SE DECIDIÓ ${decision}!`;
+                                badgeResultado.className = `resultado-box decision-${decision.toLowerCase()}`;
+
+                                // Habilitamos el botón para que el estudiante pueda continuar
+                                btnEnviarRespuesta.disabled = false;
+                                btnEnviarRespuesta.textContent = "Enviar Solución al Tutor";
+
+                                // Limpiamos el cuadro de respuesta del alumno para que esté listo para el siguiente reto
+                                txtRespuesta.value = "";
+
+                                // Añadimos un pequeño botón dinámico para pasar a la siguiente clase con el nuevo nivel
+                                const btnSiguiente = document.createElement('button');
+                                btnSiguiente.textContent = "🔄 Cargar material del siguiente nivel";
+                                btnSiguiente.style.marginTop = "15px";
+                                btnSiguiente.style.backgroundColor = "#10b981";
+                                btnSiguiente.addEventListener('click', () => {
+                                    contenedorEvaluacion.classList.add('oculto');
+                                    pizarraTutor.innerHTML = `<p class="loading">🔄 Preparando nuevo material adaptado para el Nivel ${nivelActual}...</p>`;
+                                    consultarTutorIA();
+                                });
+                                textoEvaluacion.appendChild(btnSiguiente);
+                            }
+                        }
+                        return;
+                    }
+
+                    textoRenderizadoActual += textoRecibidoCompleto[indiceEfecto];
+                    indiceEfecto++;
+                    textoEvaluacion.innerHTML = marked.parse(textoRenderizadoActual);
+                }, 20);
+
+                // 🌊 Bucle de lectura de red de alta velocidad
+                while (true) {
+                    const { value, done } = await reader.read();
+                    if (done) break;
+
+                    const chunkTexto = decoder.decode(value, { stream: true });
+                    const lineas = chunkTexto.split('\n');
+
+                    for (const linea of lineas) {
+                        const lineaLimpia = linea.trim();
+                        if (!lineaLimpia || lineaLimpia === 'data: [DONE]') continue;
+
+                        if (lineaLimpia.startsWith('data: ')) {
+                            try {
+                                const jsonString = lineaLimpia.slice(6);
+                                const objetoData = JSON.parse(jsonString);
+
+                                // Si es el paquete de metadatos finales con la decisión y nivel...
+                                if (objetoData.finControl) {
+                                    datosFinalesControl = objetoData;
+                                } else if (objetoData.texto) {
+                                    // Si es texto de la crítica regular, se acumula al buffer para que el intervalo lo dibuje
+                                    // Evitamos meter en pantalla el tag de control estético
+                                    if (!objetoData.texto.includes('[DECISION:')) {
+                                        textoRecibidoCompleto += objetoData.texto;
+                                    }
+                                }
+                            } catch (err) {
+                                console.warn("Paquete fragmentado en evaluación");
+                            }
+                        }
+                    }
+                }
+
+                // El streaming por internet ha finalizado
+                window.evalTerminado = true;
 
             } catch (error) {
                 console.error(error);
                 alert("❌ Ocurrió un error al enviar la solución.");
-            } finally {
                 btnEnviarRespuesta.disabled = false;
                 btnEnviarRespuesta.textContent = "Enviar Solución al Tutor";
+                contenedorEvaluacion.classList.add('oculto');
             }
         });
 
