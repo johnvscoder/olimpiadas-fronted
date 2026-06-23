@@ -580,15 +580,21 @@
                                 const jsonString = lineaLimpia.slice(6);
                                 const objetoData = JSON.parse(jsonString);
 
-                                // Si es el paquete de metadatos finales con la decisión y nivel...
+                                // 🌊 Modifica esta sección dentro del while (true) de tu btnEnviarRespuesta:
                                 if (objetoData.finControl) {
                                     datosFinalesControl = objetoData;
                                 } else if (objetoData.texto) {
-                                    // Si es texto de la crítica regular, se acumula al buffer para que el intervalo lo dibuje
-                                    // Evitamos meter en pantalla el tag de control estético
-                                    if (!objetoData.texto.includes('[DECISION:')) {
-                                        textoRecibidoCompleto += objetoData.texto;
+                                    // 1. Almacenamos el fragmento en una variable temporal
+                                    let fragmentoFiltrado = objetoData.texto;
+
+                                    // 2. Si el fragmento incluye la etiqueta de decisión, la removemos limpiamente
+                                    // usando una expresión regular para no perder las palabras que vengan antes o después
+                                    if (fragmentoFiltrado.includes('[DECISION:')) {
+                                        fragmentoFiltrado = fragmentoFiltrado.replace(/\[DECISION:[A-Z]+\]/g, '');
                                     }
+
+                                    // 3. Acumulamos el texto ya limpio en la cola de impresión suave
+                                    textoRecibidoCompleto += fragmentoFiltrado;
                                 }
                             } catch (err) {
                                 console.warn("Paquete fragmentado en evaluación");
