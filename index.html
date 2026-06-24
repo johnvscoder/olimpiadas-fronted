@@ -412,7 +412,7 @@
 
                 // ⏱️ CONFIGURACIÓN DE VELOCIDAD
                 // Menos milisegundos = Más rápido. 15ms a 25ms suele dar el efecto más estético.
-                const VELOCIDAD_MS = 5;
+                const VELOCIDAD_MS = 1;
 
                 // 🌟 CAMBIO: Asignamos el intervalo directamente a la variable global sin usar "const"
                 idIntervaloClase = setInterval(() => {
@@ -530,6 +530,8 @@
                 if (idIntervaloEval) clearInterval(idIntervaloEval);
                 window.evalTerminado = false;
 
+                const VELOCIDAD_MS = 1;
+
                 // Asignamos a nuestra variable global
                 idIntervaloEval = setInterval(() => {
                     if (indiceEfecto >= textoRecibidoCompleto.length) {
@@ -574,7 +576,7 @@
                     textoRenderizadoActual += textoRecibidoCompleto[indiceEfecto];
                     indiceEfecto++;
                     textoEvaluacion.innerHTML = marked.parse(textoRenderizadoActual);
-                }, 20);
+                }, VELOCIDAD_MS);
 
                 // 🌊 Bucle de lectura de red de alta velocidad
                 while (true) {
