@@ -279,6 +279,10 @@
         let temaSeleccionadoId = '';
         let nivelActual = 0;
 
+        // Variables de control de intervalos residuo
+        let idIntervaloClase = null;
+        let idIntervaloEval = null;
+
         // Elementos de la interfaz
         const pantallaLogin = document.getElementById('pantallaLogin');
         const pantallaPrincipal = document.getElementById('pantallaPrincipal');
@@ -378,6 +382,11 @@
 
         // 🤖 ACTUALIZADO CON VELOCIDAD SUAVE (MÁQUINA DE ESCRIBIR) Y MARKDOWN
         async function consultarTutorIA() {
+
+            // 🧹 LIMPIEZA DE SEGURIDAD CONTRA ENCABALGAMIENTOS
+            if (idIntervaloClase) clearInterval(idIntervaloClase);
+            window.streamTerminado = false;
+
             try {
                 const respuesta = await fetch(`${BACKEND_URL}/api/tutor/clase`, {
                     method: 'POST',
@@ -405,8 +414,8 @@
                 // Menos milisegundos = Más rápido. 15ms a 25ms suele dar el efecto más estético.
                 const VELOCIDAD_MS = 20;
 
-                // Este intervalo se encarga de ir imprimiendo el texto letra por letra de forma constante
-                const intervaloEscritura = setInterval(() => {
+                // 🌟 CAMBIO: Asignamos el intervalo directamente a la variable global sin usar "const"
+                idIntervaloClase = setInterval(() => {
                     // Si ya imprimimos todo lo que ha llegado hasta el momento
                     if (indiceEfecto >= textoRecibidoCompleto.length) {
                         // Si el lector de internet ya terminó por completo, limpiamos el timer
@@ -517,8 +526,12 @@
                 let datosFinalesControl = null; // Guardará el veredicto cuando llegue del servidor
                 window.evalTerminado = false;
 
-                // ⏱️ INTERVALO DE ESCRITURA SUAVE (Velocidad: 20ms por carácter)
-                const intervaloEscrituraEval = setInterval(() => {
+                // 🧹 Limpieza de seguridad antes de arrancar el intervalo de evaluación
+                if (idIntervaloEval) clearInterval(idIntervaloEval);
+                window.evalTerminado = false;
+
+                // Asignamos a nuestra variable global
+                idIntervaloEval = setInterval(() => {
                     if (indiceEfecto >= textoRecibidoCompleto.length) {
                         if (window.evalTerminado) {
                             clearInterval(intervaloEscrituraEval);
