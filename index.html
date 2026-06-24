@@ -412,7 +412,7 @@
 
                 // ⏱️ CONFIGURACIÓN DE VELOCIDAD
                 // Menos milisegundos = Más rápido. 15ms a 25ms suele dar el efecto más estético.
-                const VELOCIDAD_MS = 20;
+                const VELOCIDAD_MS = 5;
 
                 // 🌟 CAMBIO: Asignamos el intervalo directamente a la variable global sin usar "const"
                 idIntervaloClase = setInterval(() => {
@@ -420,7 +420,7 @@
                     if (indiceEfecto >= textoRecibidoCompleto.length) {
                         // Si el lector de internet ya terminó por completo, limpiamos el timer
                         if (window.streamTerminado) {
-                            clearInterval(intervaloEscritura);
+                            clearInterval(idIntervaloClase);
                         }
                         return; // Esperamos en el siguiente ciclo a que llegue más internet
                     }
@@ -534,7 +534,7 @@
                 idIntervaloEval = setInterval(() => {
                     if (indiceEfecto >= textoRecibidoCompleto.length) {
                         if (window.evalTerminado) {
-                            clearInterval(intervaloEscrituraEval);
+                            clearInterval(idIntervaloEval);
 
                             // 🎯 FASE FINAL: Cuando termina de escribir la crítica, procesamos el veredicto
                             if (datosFinalesControl) {
