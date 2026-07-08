@@ -643,27 +643,74 @@
                 }, 1);
 
                 while (true) {
+                    // ... dentro del bucle while (true) del lector del stream en tu index.html:
                     const { value, done } = await reader.read();
                     if (done) break;
-                    const chunkTexto = decoder.decode(value, { stream: true });
-                    const lineas = chunkTexto.split('\n');
+
+                    const chunk = decoder.decode(value, { stream: true });
+                    // ⚠️ CORRECCIÓN: Dividir explícitamente por el delimitador de eventos SSE
+                    const lineas = chunk.split('\n');
 
                     for (const linea of lineas) {
                         const lineaLimpia = linea.trim();
+                        if (!lineaLimpia) continue;
 
-                        // Busca esta sección en la lógica del botón enviar de tu index.html
                         if (lineaLimpia.startsWith('data: ')) {
+                            const contenidoData = lineaLimpia.slice(6).trim();
+
+                            if (contenidoData === '[DONE]') {
+                                break;
+                            }
+
                             try {
-                                const json = JSON.parse(lineaLimpia.slice(6));
+                                const json = JSON.parse(contenidoData);
+
                                 if (json.finControl) {
-                                    datosFinalesControl = json; // Guarda el veredicto para el cierre
+                                    // ¡Llegó la señal de fin con éxito!
+                                    datosFinalesControl = json;
+
+                                    // 🏆 SOLUCIÓN AL PASO DE NIVEL: Actualizar inmediatamente el estado o recargar componentes
+                                    alert(`Evaluación completada: Nivel ${json.decision === 'SUBIR' ? 'Aumentado' : json.decision === 'BAJAR' ? 'Disminuido' : 'Mantenido'}. Nuevo nivel: ${json.nuevoNivel}/10`);
+
+                                    // Desbloqueas el botón aquí directamente por seguridad
+                                    btnEnviar.disabled = false;
+                                    btnEnviar.innerHTML = "✏️ Enviar otra solución";
+
+                                    // Forzar la recarga del catálogo de temas para que el nuevo nivel se pinte en pantalla
+                                    if (typeof cargarTemas === 'function') cargarTemas();
+
+                                    break; // Rompe el bucle de lectura del stream
                                 } else if (json.texto) {
-                                    // Remueve las etiquetas del renderizado en vivo para que el alumno no las vea feas en texto plano
+                                    // Filtrar etiquetas de control visualmente
                                     textoRecibidoCompleto += json.texto.replace(/\[DECISION:[A-Z]+\]/g, '');
+                                    divResultado.innerHTML = mardownRenderer(textoRecibidoCompleto); // Tu función encargada de renderizar
                                 }
-                            } catch (e) { }
+                            } catch (e) {
+                                console.warn("Línea omitida o incompleta en el buffer:", lineaLimpia);
+                            }
                         }
                     }
+                    // const { value, done } = await reader.read();
+                    // if (done) break;
+                    // const chunkTexto = decoder.decode(value, { stream: true });
+                    // const lineas = chunkTexto.split('\n');
+
+                    // for (const linea of lineas) {
+                    //     const lineaLimpia = linea.trim();
+
+                    //     // Busca esta sección en la lógica del botón enviar de tu index.html
+                    //     if (lineaLimpia.startsWith('data: ')) {
+                    //         try {
+                    //             const json = JSON.parse(lineaLimpia.slice(6));
+                    //             if (json.finControl) {
+                    //                 datosFinalesControl = json; // Guarda el veredicto para el cierre
+                    //             } else if (json.texto) {
+                    //                 // Remueve las etiquetas del renderizado en vivo para que el alumno no las vea feas en texto plano
+                    //                 textoRecibidoCompleto += json.texto.replace(/\[DECISION:[A-Z]+\]/g, '');
+                    //             }
+                    //         } catch (e) { }
+                    //     }
+                    // }
                 }
                 window.evalTerminado = true;
             } catch (error) {
