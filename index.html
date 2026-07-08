@@ -28,9 +28,7 @@
             margin-top: 20px;
         }
 
-        h1,
-        h2,
-        h3 {
+        h1, h2, h3 {
             color: #1e3a8a;
             text-align: center;
             margin-top: 0;
@@ -44,8 +42,7 @@
             gap: 15px;
         }
 
-        input,
-        textarea {
+        input, textarea {
             padding: 12px;
             font-size: 16px;
             border: 1px solid #cbd5e1;
@@ -89,7 +86,30 @@
             background-color: #475569;
         }
 
-        /* Lista de Temas */
+        /* Controles de Nivel Manual */
+        .controles-nivel {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-nivel {
+            background-color: #e2e8f0;
+            color: #1e3a8a;
+            width: 32px;
+            height: 32px;
+            padding: 0;
+            font-size: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+        }
+
+        .btn-nivel:hover {
+            background-color: #cbd5e1;
+        }
+
         .lista-temas {
             display: flex;
             flex-direction: column;
@@ -126,9 +146,9 @@
             background: #e2e8f0;
             padding: 2px 8px;
             border-radius: 12px;
+            margin-right: 5px;
         }
 
-        /* 🎯 ESTILOS NUEVOS: Pantalla del Tutor e Indicador de Nivel */
         .header-tutor {
             display: flex;
             justify-content: space-between;
@@ -178,7 +198,6 @@
             display: none !important;
         }
 
-        /* 📝 ESTILOS PARA LA NUEVA PIZARRA DE EVALUACIÓN */
         .pizarra-evaluacion {
             margin-top: 25px;
             padding: 20px;
@@ -203,23 +222,22 @@
             font-size: 14px;
         }
 
-        .decision-subir {
-            background-color: #d1fae5;
-            color: #065f46;
-            border: 1px solid #10b981;
-        }
+        .decision-subir { background-color: #d1fae5; color: #065f46; border: 1px solid #10b981; }
+        .decision-mantener { background-color: #fef3c7; color: #92400e; border: 1px solid #f59e0b; }
+        .decision-bajar { background-color: #fee2e2; color: #991b1b; border: 1px solid #ef4444; }
 
-        .decision-mantener {
-            background-color: #fef3c7;
-            color: #92400e;
-            border: 1px solid #f59e0b;
+        /* Estilos Tabla Dashboard */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
         }
-
-        .decision-bajar {
-            background-color: #fee2e2;
-            color: #991b1b;
-            border: 1px solid #ef4444;
+        th, td {
+            padding: 12px;
+            border: 1px solid #cbd5e1;
+            text-align: left;
         }
+        th { background-color: #f1f5f9; color: #1e3a8a; }
     </style>
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 </head>
@@ -238,6 +256,10 @@
     </div>
 
     <div id="pantallaPrincipal" class="container oculto">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <button id="btnVerDashboard" class="btn-secundario" style="margin: 0;">📊 Ver Dashboard Tutor</button>
+            <button id="btnCerrarSesion" class="btn-secundario" style="background-color: #ef4444; margin: 0;">Cerrar Sesión</button>
+        </div>
         <h1>🏆 Panel de Entrenamiento Olímpico</h1>
         <p style="text-align: center; color: #64748b;">Selecciona el tema de matemáticas que deseas entrenar hoy:</p>
         <div id="contenedorTemas" class="lista-temas">
@@ -250,7 +272,11 @@
 
         <div class="header-tutor">
             <h2 id="lblNombreTema" style="margin: 0; text-align: left;">Tema de Olimpiada</h2>
-            <div id="lblNivel" class="badge-nivel">Nivel 0 / 10</div>
+            <div class="controles-nivel">
+                <button id="btnNivelBajar" class="btn-nivel">-</button>
+                <div id="lblNivel" class="badge-nivel">Nivel 0 / 10</div>
+                <button id="btnNivelSubir" class="btn-nivel">+</button>
+            </div>
         </div>
 
         <div id="pizarraTutor" class="pizarra">
@@ -264,29 +290,51 @@
         </div>
 
         <div class="zona-respuesta">
-            <label for="txtRespuesta" style="font-weight: bold; color: #1e3a8a;">✍️ Escribe tu solución detallada
-                aquí:</label>
-            <textarea id="txtRespuesta"
-                placeholder="Explica tu razonamiento paso a paso y escribe tu respuesta final..."></textarea>
+            <label for="txtRespuesta" style="font-weight: bold; color: #1e3a8a;">✍️ Escribe tu solución detallada aquí:</label>
+            <textarea id="txtRespuesta" placeholder="Explica tu razonamiento paso a paso y escribe tu respuesta final..."></textarea>
             <button id="btnEnviarRespuesta">Enviar Solución al Tutor</button>
         </div>
     </div>
 
-    <script>
-        const BACKEND_URL = 'https://olimpiadas-backend.onrender.com';
+    <div id="pantallaDashboard" class="container oculto">
+        <button id="btnVolverDeDashboard" class="btn-secundario">← Volver al Panel</button>
+        <h2>📊 Rendimiento Global de Alumnos</h2>
+        <p style="color: #64748b; text-align: center;">Métricas netas recolectadas desde la base de datos centralizada.</p>
+        <table>
+            <thead>
+                <tr>
+                    <th>Nombre del Alumno</th>
+                    <th>Problemas Resueltos Correctamente</th>
+                    <th>Tiempo Total Dedicado</th>
+                </tr>
+            </thead>
+            <tbody id="tablaDashboardBody">
+                </tbody>
+        </table>
+    </div>
 
-        // Variables de Control de Estado del Alumno (Temporales en Frontend)
+    <script>
+        const BACKEND_URL = 'http://localhost:3000'; // Ajusta a tu Render URL en producción
+
+        // Estado Global de la App
+        let tokenSesion = "";
         let temaSeleccionadoId = '';
         let nivelActual = 0;
+        let nivelMaximoHistorico = 0;
 
-        // Variables de control de intervalos residuo
+        // Variables de Control de Intervalos de IA
         let idIntervaloClase = null;
         let idIntervaloEval = null;
 
-        // Elementos de la interfaz
+        // ⏱️ Control del Cronómetro de Tiempo Conectado
+        let segundosAcumuladosLocal = 0;
+        let idIntervaloTiempo = null;
+
+        // Elementos del DOM
         const pantallaLogin = document.getElementById('pantallaLogin');
         const pantallaPrincipal = document.getElementById('pantallaPrincipal');
         const pantallaTutor = document.getElementById('pantallaTutor');
+        const pantallaDashboard = document.getElementById('pantallaDashboard');
 
         const btnLogin = document.getElementById('btnLogin');
         const txtUsuario = document.getElementById('txtUsuario');
@@ -294,7 +342,6 @@
         const lblError = document.getElementById('lblError');
         const contenedorTemas = document.getElementById('contenedorTemas');
 
-        // Nuevos elementos del tutor
         const btnVolver = document.getElementById('btnVolver');
         const lblNombreTema = document.getElementById('lblNombreTema');
         const lblNivel = document.getElementById('lblNivel');
@@ -302,7 +349,15 @@
         const txtRespuesta = document.getElementById('txtRespuesta');
         const btnEnviarRespuesta = document.getElementById('btnEnviarRespuesta');
 
-        // Lógica del Login
+        const btnNivelBajar = document.getElementById('btnNivelBajar');
+        const btnNivelSubir = document.getElementById('btnNivelSubir');
+
+        const btnVerDashboard = document.getElementById('btnVerDashboard');
+        const btnVolverDeDashboard = document.getElementById('btnVolverDeDashboard');
+        const tablaDashboardBody = document.getElementById('tablaDashboardBody');
+        const btnCerrarSesion = document.getElementById('btnCerrarSesion');
+
+        // Lógica de Login e Inicio de Cronómetro
         btnLogin.addEventListener('click', async () => {
             lblError.textContent = "";
             try {
@@ -314,9 +369,11 @@
                 const resultado = await respuesta.json();
 
                 if (resultado.exito) {
+                    tokenSesion = resultado.token;
                     pantallaLogin.classList.add('oculto');
                     pantallaPrincipal.classList.remove('oculto');
                     cargarTemas();
+                    iniciarMonitoreoTiempo(); // Arranca el contador
                 } else {
                     lblError.textContent = resultado.mensaje;
                 }
@@ -325,10 +382,34 @@
             }
         });
 
-        // Cargar temas del backend
+        // Cronómetro en Segundo Plano (Sincroniza cada 10 segundos)
+        function iniciarMonitoreoTiempo() {
+            if (idIntervaloTiempo) clearInterval(idIntervaloTiempo);
+            segundosAcumuladosLocal = 0;
+
+            idIntervaloTiempo = setInterval(async () => {
+                segundosAcumuladosLocal += 10;
+                try {
+                    await fetch(`${BACKEND_URL}/api/alumno/sincronizar-tiempo`, {
+                        method: 'POST',
+                        headers: { 
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${tokenSesion}`
+                        },
+                        body: JSON.stringify({ segundos: 10 })
+                    });
+                } catch (e) {
+                    console.warn("Fallo temporal de red al guardar tiempo.");
+                }
+            }, 10000);
+        }
+
+        // Cargar Lista de Temas Dinámica
         async function cargarTemas() {
             try {
-                const respuesta = await fetch(`${BACKEND_URL}/api/temas`);
+                const respuesta = await fetch(`${BACKEND_URL}/api/temas`, {
+                    headers: { 'Authorization': `Bearer ${tokenSesion}` }
+                });
                 const temas = await respuesta.json();
                 contenedorTemas.innerHTML = "";
 
@@ -339,15 +420,13 @@
                         <div class="tema-info">
                             <h3>${tema.nombre}</h3>
                             <span>${tema.area}</span>
+                            <span style="background:#10b981; color:white;">Tu nivel: ${tema.nivel_actual}/10</span>
                         </div>
                         <div class="flecha">Entrar →</div>
                     `;
-
-                    // ACCIÓN DEL CLIC: Ir a la pantalla del tutor
                     card.addEventListener('click', () => {
-                        activarPantallaTutor(tema.id, tema.nombre);
+                        activarPantallaTutor(tema.id, tema.nombre, tema.nivel_actual, tema.nivel_maximo);
                     });
-
                     contenedorTemas.appendChild(card);
                 });
             } catch (error) {
@@ -355,216 +434,174 @@
             }
         }
 
-        // 🔄 FUNCIÓN NUEVA: Intercambio de pantalla hacia el Tutor
-        function activarPantallaTutor(idTema, nombreTema) {
+        // Cambiar a Pantalla Tutor cargando memoria histórica
+        function activarPantallaTutor(idTema, nombreTema, nivelAct, nivelMax) {
             temaSeleccionadoId = idTema;
-            nivelActual = 0; // Por ahora empezamos en cero cada vez
+            nivelActual = nivelAct;
+            nivelMaximoHistorico = nivelMax;
 
-            // Actualizar textos informativos
             lblNombreTema.textContent = nombreTema;
             lblNivel.textContent = `Nivel ${nivelActual} / 10`;
-            pizarraTutor.innerHTML = `<p class="loading">⏳ El tutor de IA está preparando el material de nivel ${nivelActual} sobre "${nombreTema}"...</p>`;
-            txtRespuesta.value = ""; // Limpiar cuadro de texto
+            pizarraTutor.innerHTML = `<p class="loading">⏳ Preparando material adaptado sobre "${nombreTema}"...</p>`;
+            txtRespuesta.value = "";
+            document.getElementById('contenedorEvaluacion').classList.add('oculto');
 
-            // Cambiar visibilidad de pantallas
             pantallaPrincipal.classList.add('oculto');
             pantallaTutor.classList.remove('oculto');
 
-            // Llamada provisional: Usamos tu ruta vieja de Gemini por ahora
             consultarTutorIA();
         }
 
-        // Botón Volver
-        btnVolver.addEventListener('click', () => {
-            pantallaTutor.classList.add('oculto');
-            pantallaPrincipal.classList.remove('oculto');
+        // 🔘 BOTONES DE AVANCE Y RETROCESO MANUAL CONTROLADO
+        btnNivelBajar.addEventListener('click', () => {
+            if (nivelActual > 0) {
+                nivelActual--;
+                guardarYRefrescarNivel();
+            }
         });
 
-        // 🤖 ACTUALIZADO CON VELOCIDAD SUAVE (MÁQUINA DE ESCRIBIR) Y MARKDOWN
-        async function consultarTutorIA() {
+        btnNivelSubir.addEventListener('click', () => {
+            if (nivelActual < nivelMaximoHistorico) {
+                nivelActual++;
+                guardarYRefrescarNivel();
+            } else {
+                alert(`⚠️ No puedes avanzar al nivel ${nivelActual + 1} de forma manual. Debes resolver correctamente el problema actual para que el Tutor de IA te autorice subir.`);
+            }
+        });
 
-            // 🧹 LIMPIEZA DE SEGURIDAD CONTRA ENCABALGAMIENTOS
+        async function guardarYRefrescarNivel() {
+            lblNivel.textContent = `Nivel ${nivelActual} / 10`;
+            pizarraTutor.innerHTML = `<p class="loading">🔄 Ajustando nivel de dificultad al Nivel ${nivelActual}...</p>`;
+            
+            await fetch(`${BACKEND_URL}/api/tutor/guardar-nivel`, {
+                method: 'POST',
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${tokenSesion}`
+                },
+                body: JSON.stringify({ temaId: temaSeleccionadoId, nuevoNivel: nivelActual })
+            });
+            consultarTutorIA();
+        }
+
+        // Consultar Clase (Streaming)
+        async function consultarTutorIA() {
             if (idIntervaloClase) clearInterval(idIntervaloClase);
             window.streamTerminado = false;
 
             try {
                 const respuesta = await fetch(`${BACKEND_URL}/api/tutor/clase`, {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${tokenSesion}`
                     },
-                    body: JSON.stringify({
-                        temaId: temaSeleccionadoId,
-                        nivel: nivelActual
-                    })
+                    body: JSON.stringify({ temaId: temaSeleccionadoId })
                 });
-
-                if (!respuesta.ok) throw new Error("Error en la respuesta del servidor");
 
                 const reader = respuesta.body.getReader();
                 const decoder = new TextDecoder();
-
                 pizarraTutor.innerHTML = "";
 
-                let textoRecibidoCompleto = ""; // Guarda todo lo que llega de la IA
-                let textoRenderizadoActual = ""; // Lo que se ha mostrado en pantalla hasta el momento
-                let indiceEfecto = 0; // Marcador de posición para el retraso
+                let textoRecibidoCompleto = "";
+                let textoRenderizadoActual = "";
+                let indiceEfecto = 0;
 
-                // ⏱️ CONFIGURACIÓN DE VELOCIDAD
-                // Menos milisegundos = Más rápido. 15ms a 25ms suele dar el efecto más estético.
-                const VELOCIDAD_MS = 1;
-
-                // 🌟 CAMBIO: Asignamos el intervalo directamente a la variable global sin usar "const"
                 idIntervaloClase = setInterval(() => {
-                    // Si ya imprimimos todo lo que ha llegado hasta el momento
                     if (indiceEfecto >= textoRecibidoCompleto.length) {
-                        // Si el lector de internet ya terminó por completo, limpiamos el timer
-                        if (window.streamTerminado) {
-                            clearInterval(idIntervaloClase);
-                        }
-                        return; // Esperamos en el siguiente ciclo a que llegue más internet
+                        if (window.streamTerminado) clearInterval(idIntervaloClase);
+                        return;
                     }
-
-                    // Agregamos el siguiente carácter disponible en la cola
                     textoRenderizadoActual += textoRecibidoCompleto[indiceEfecto];
                     indiceEfecto++;
-
-                    // Renderizamos en la pizarra convirtiendo a Markdown en tiempo real
                     pizarraTutor.innerHTML = marked.parse(textoRenderizadoActual);
-                }, VELOCIDAD_MS);
+                }, 1);
 
-                // Control de estado para avisar al intervalo que el flujo de red terminó
-                window.streamTerminado = false;
-
-                // Bucle que lee la red a máxima velocidad y la acumula en el buffer de espera
                 while (true) {
                     const { value, done } = await reader.read();
                     if (done) break;
-
                     const chunkTexto = decoder.decode(value, { stream: true });
                     const lineas = chunkTexto.split('\n');
 
                     for (const linea of lineas) {
                         const lineaLimpia = linea.trim();
-                        if (!lineaLimpia || lineaLimpia === 'data: [DONE]') continue;
-
                         if (lineaLimpia.startsWith('data: ')) {
                             try {
-                                const jsonString = lineaLimpia.slice(6);
-                                const objetoData = JSON.parse(jsonString);
-
-                                if (objetoData.texto) {
-                                    // En lugar de renderizar aquí de golpe, lo acumulamos en la cola de impresión
-                                    textoRecibidoCompleto += objetoData.texto;
-                                }
-                            } catch (err) {
-                                console.warn("Paquete fragmentado recibido de forma asíncrona");
-                            }
+                                const json = JSON.parse(lineaLimpia.slice(6));
+                                if (json.texto) textoRecibidoCompleto += json.texto;
+                            } catch(e){}
                         }
                     }
                 }
-
-                // Cuando el bucle del fetch termina por completo, le avisamos al intervalo
                 window.streamTerminado = true;
-
             } catch (error) {
-                console.error(error);
-                pizarraTutor.innerHTML = "<p style='color:red;'>❌ Error al conectar con el Tutor de IA. Intenta de nuevo en unos segundos.</p>";
+                pizarraTutor.innerHTML = "<p style='color:red;'>❌ Error al conectar con el Tutor.</p>";
             }
         }
 
-
-        // 🚀 EVALUACIÓN INTEGRADA CON STREAMING Y CONTROL DE VELOCIDAD SUAVE
+        // Evaluar Respuesta (Streaming)
         btnEnviarRespuesta.addEventListener('click', async () => {
             const respuestaAlumno = txtRespuesta.value.trim();
-            const problemaPlanteado = pizarraTutor.textContent;
+            if (!respuestaAlumno) return alert("⚠️ Escribe tu solución primero.");
 
-            if (!respuestaAlumno) {
-                alert("⚠️ Por favor, escribe tu solución antes de enviarla.");
-                return;
-            }
-
-            // 1. Capturamos los elementos de la nueva pizarra de evaluación
             const contenedorEvaluacion = document.getElementById('contenedorEvaluacion');
             const textoEvaluacion = document.getElementById('textoEvaluacion');
             const badgeResultado = document.getElementById('badgeResultado');
 
-            // 2. Bloqueamos el botón y limpiamos estados previos
             btnEnviarRespuesta.disabled = true;
-            btnEnviarRespuesta.textContent = "⏳ El Tutor está evaluando tu lógica...";
-
-            // Mostramos la pizarra de evaluación vacía para dar la sensación de carga
+            btnEnviarRespuesta.textContent = "⏳ Analizando lógica...";
             contenedorEvaluacion.classList.remove('oculto');
-            textoEvaluacion.innerHTML = `<p class="loading">🧠 El Tutor de IA está analizando tu procedimiento matemático paso a paso...</p>`;
+            textoEvaluacion.innerHTML = `<p class="loading">🧠 El Tutor está evaluando tu procedimiento...</p>`;
             badgeResultado.className = "resultado-box oculto";
-            badgeResultado.textContent = "";
 
             try {
                 const respuesta = await fetch(`${BACKEND_URL}/api/tutor/evaluar`, {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${tokenSesion}`
+                    },
                     body: JSON.stringify({
                         temaId: temaSeleccionadoId,
-                        nivel: nivelActual,
-                        problemaContexto: problemaPlanteado,
+                        problemaContexto: pizarraTutor.textContent,
                         respuestaAlumno: respuestaAlumno
                     })
                 });
 
-                if (!respuesta.ok) throw new Error("Error en la respuesta del servidor");
-
                 const reader = respuesta.body.getReader();
                 const decoder = new TextDecoder();
-
-                // Limpiamos el texto de carga de la pizarra antes de que empiece a escribir
                 textoEvaluacion.innerHTML = "";
 
-                let textoRecibidoCompleto = ""; // Almacén de red
-                let textoRenderizadoActual = ""; // Almacén visual
+                let textoRecibidoCompleto = "";
+                let textoRenderizadoActual = "";
                 let indiceEfecto = 0;
+                let datosFinalesControl = null;
 
-                let datosFinalesControl = null; // Guardará el veredicto cuando llegue del servidor
-                window.evalTerminado = false;
-
-                // 🧹 Limpieza de seguridad antes de arrancar el intervalo de evaluación
                 if (idIntervaloEval) clearInterval(idIntervaloEval);
                 window.evalTerminado = false;
 
-                const VELOCIDAD_MS = 1;
-
-                // Asignamos a nuestra variable global
                 idIntervaloEval = setInterval(() => {
                     if (indiceEfecto >= textoRecibidoCompleto.length) {
                         if (window.evalTerminado) {
                             clearInterval(idIntervaloEval);
-
-                            // 🎯 FASE FINAL: Cuando termina de escribir la crítica, procesamos el veredicto
                             if (datosFinalesControl) {
-                                const decision = datosFinalesControl.decision;
                                 nivelActual = datosFinalesControl.nuevoNivel;
-
-                                // Actualizamos el indicador de nivel principal arriba en la pantalla
                                 lblNivel.textContent = `Nivel ${nivelActual} / 10`;
 
-                                // Dibuja el badge decorativo abajo de la corrección
-                                badgeResultado.textContent = `¡VEREDICTO: SE DECIDIÓ ${decision}!`;
-                                badgeResultado.className = `resultado-box decision-${decision.toLowerCase()}`;
+                                badgeResultado.textContent = `¡VEREDICTO: SE DECIDIÓ ${datosFinalesControl.decision}!`;
+                                badgeResultado.className = `resultado-box decision-${datosFinalesControl.decision.toLowerCase()}`;
+                                badgeResultado.classList.remove('oculto');
 
-                                // Habilitamos el botón para que el estudiante pueda continuar
                                 btnEnviarRespuesta.disabled = false;
                                 btnEnviarRespuesta.textContent = "Enviar Solución al Tutor";
-
-                                // Limpiamos el cuadro de respuesta del alumno para que esté listo para el siguiente reto
                                 txtRespuesta.value = "";
 
-                                // Añadimos un pequeño botón dinámico para pasar a la siguiente clase con el nuevo nivel
                                 const btnSiguiente = document.createElement('button');
-                                btnSiguiente.textContent = "🔄 Cargar material del siguiente nivel";
+                                btnSiguiente.textContent = "🔄 Continuar al Siguiente Reto";
                                 btnSiguiente.style.marginTop = "15px";
                                 btnSiguiente.style.backgroundColor = "#10b981";
                                 btnSiguiente.addEventListener('click', () => {
                                     contenedorEvaluacion.classList.add('oculto');
-                                    pizarraTutor.innerHTML = `<p class="loading">🔄 Preparando nuevo material adaptado para el Nivel ${nivelActual}...</p>`;
                                     consultarTutorIA();
                                 });
                                 textoEvaluacion.appendChild(btnSiguiente);
@@ -572,66 +609,81 @@
                         }
                         return;
                     }
-
                     textoRenderizadoActual += textoRecibidoCompleto[indiceEfecto];
                     indiceEfecto++;
                     textoEvaluacion.innerHTML = marked.parse(textoRenderizadoActual);
-                }, VELOCIDAD_MS);
+                }, 1);
 
-                // 🌊 Bucle de lectura de red de alta velocidad
                 while (true) {
                     const { value, done } = await reader.read();
                     if (done) break;
-
                     const chunkTexto = decoder.decode(value, { stream: true });
                     const lineas = chunkTexto.split('\n');
 
                     for (const linea of lineas) {
                         const lineaLimpia = linea.trim();
-                        if (!lineaLimpia || lineaLimpia === 'data: [DONE]') continue;
-
                         if (lineaLimpia.startsWith('data: ')) {
                             try {
-                                const jsonString = lineaLimpia.slice(6);
-                                const objetoData = JSON.parse(jsonString);
-
-                                // 🌊 Modifica esta sección dentro del while (true) de tu btnEnviarRespuesta:
-                                if (objetoData.finControl) {
-                                    datosFinalesControl = objetoData;
-                                } else if (objetoData.texto) {
-                                    // 1. Almacenamos el fragmento en una variable temporal
-                                    let fragmentoFiltrado = objetoData.texto;
-
-                                    // 2. Si el fragmento incluye la etiqueta de decisión, la removemos limpiamente
-                                    // usando una expresión regular para no perder las palabras que vengan antes o después
-                                    if (fragmentoFiltrado.includes('[DECISION:')) {
-                                        fragmentoFiltrado = fragmentoFiltrado.replace(/\[DECISION:[A-Z]+\]/g, '');
-                                    }
-
-                                    // 3. Acumulamos el texto ya limpio en la cola de impresión suave
-                                    textoRecibidoCompleto += fragmentoFiltrado;
+                                const json = JSON.parse(lineaLimpia.slice(6));
+                                if (json.finControl) datosFinalesControl = json;
+                                else if (json.texto) {
+                                    textoRecibidoCompleto += json.texto.replace(/\[DECISION:[A-Z]+\]/g, '');
                                 }
-                            } catch (err) {
-                                console.warn("Paquete fragmentado en evaluación");
-                            }
+                            } catch(e){}
                         }
                     }
                 }
-
-                // El streaming por internet ha finalizado
                 window.evalTerminado = true;
-
             } catch (error) {
-                console.error(error);
-                alert("❌ Ocurrió un error al enviar la solución.");
+                alert("❌ Error en la evaluación.");
                 btnEnviarRespuesta.disabled = false;
-                btnEnviarRespuesta.textContent = "Enviar Solución al Tutor";
-                contenedorEvaluacion.classList.add('oculto');
             }
         });
 
+        // Lógica de Navegación del Dashboard de Estadísticas
+        btnVerDashboard.addEventListener('click', async () => {
+            pantallaPrincipal.classList.add('oculto');
+            pantallaDashboard.classList.remove('oculto');
+            
+            try {
+                const res = await fetch(`${BACKEND_URL}/api/admin/dashboard`);
+                const alumnos = await res.json();
+                tablaDashboardBody.innerHTML = "";
 
+                alumnos.forEach(a => {
+                    const fila = document.createElement('tr');
+                    fila.innerHTML = `
+                        <td><strong>${a.nombre_completo}</strong></td>
+                        <td>🎯 ${a.problemas_resueltos} resueltos correctamente</td>
+                        <td>⏱️ ${a.tiempo_total_segundos} segundos</td>
+                    `;
+                    tablaDashboardBody.appendChild(fila);
+                });
+            } catch (e) {
+                tablaDashboardBody.innerHTML = "<tr><td colspan='3' style='color:red;'>Error al cargar las estadísticas.</td></tr>";
+            }
+        });
+
+        btnVolverDeDashboard.addEventListener('click', () => {
+            pantallaDashboard.classList.add('oculto');
+            pantallaPrincipal.classList.remove('oculto');
+            cargarTemas();
+        });
+
+        btnVolver.addEventListener('click', () => {
+            pantallaTutor.classList.add('oculto');
+            pantallaPrincipal.classList.remove('oculto');
+            cargarTemas();
+        });
+
+        btnCerrarSesion.addEventListener('click', () => {
+            if (idIntervaloTiempo) clearInterval(idIntervaloTiempo);
+            tokenSesion = "";
+            pantallaPrincipal.classList.add('oculto');
+            pantallaLogin.classList.remove('oculto');
+            txtUsuario.value = "";
+            txtContrasena.value = "";
+        });
     </script>
 </body>
-
 </html>
