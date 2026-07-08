@@ -28,7 +28,9 @@
             margin-top: 20px;
         }
 
-        h1, h2, h3 {
+        h1,
+        h2,
+        h3 {
             color: #1e3a8a;
             text-align: center;
             margin-top: 0;
@@ -42,7 +44,8 @@
             gap: 15px;
         }
 
-        input, textarea {
+        input,
+        textarea {
             padding: 12px;
             font-size: 16px;
             border: 1px solid #cbd5e1;
@@ -222,9 +225,23 @@
             font-size: 14px;
         }
 
-        .decision-subir { background-color: #d1fae5; color: #065f46; border: 1px solid #10b981; }
-        .decision-mantener { background-color: #fef3c7; color: #92400e; border: 1px solid #f59e0b; }
-        .decision-bajar { background-color: #fee2e2; color: #991b1b; border: 1px solid #ef4444; }
+        .decision-subir {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #10b981;
+        }
+
+        .decision-mantener {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #f59e0b;
+        }
+
+        .decision-bajar {
+            background-color: #fee2e2;
+            color: #991b1b;
+            border: 1px solid #ef4444;
+        }
 
         /* Estilos Tabla Dashboard */
         table {
@@ -232,12 +249,18 @@
             border-collapse: collapse;
             margin-top: 15px;
         }
-        th, td {
+
+        th,
+        td {
             padding: 12px;
             border: 1px solid #cbd5e1;
             text-align: left;
         }
-        th { background-color: #f1f5f9; color: #1e3a8a; }
+
+        th {
+            background-color: #f1f5f9;
+            color: #1e3a8a;
+        }
     </style>
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 </head>
@@ -258,7 +281,8 @@
     <div id="pantallaPrincipal" class="container oculto">
         <div style="display: flex; justify-content: space-between; align-items: center;">
             <button id="btnVerDashboard" class="btn-secundario" style="margin: 0;">📊 Ver Dashboard Tutor</button>
-            <button id="btnCerrarSesion" class="btn-secundario" style="background-color: #ef4444; margin: 0;">Cerrar Sesión</button>
+            <button id="btnCerrarSesion" class="btn-secundario" style="background-color: #ef4444; margin: 0;">Cerrar
+                Sesión</button>
         </div>
         <h1>🏆 Panel de Entrenamiento Olímpico</h1>
         <p style="text-align: center; color: #64748b;">Selecciona el tema de matemáticas que deseas entrenar hoy:</p>
@@ -290,8 +314,10 @@
         </div>
 
         <div class="zona-respuesta">
-            <label for="txtRespuesta" style="font-weight: bold; color: #1e3a8a;">✍️ Escribe tu solución detallada aquí:</label>
-            <textarea id="txtRespuesta" placeholder="Explica tu razonamiento paso a paso y escribe tu respuesta final..."></textarea>
+            <label for="txtRespuesta" style="font-weight: bold; color: #1e3a8a;">✍️ Escribe tu solución detallada
+                aquí:</label>
+            <textarea id="txtRespuesta"
+                placeholder="Explica tu razonamiento paso a paso y escribe tu respuesta final..."></textarea>
             <button id="btnEnviarRespuesta">Enviar Solución al Tutor</button>
         </div>
     </div>
@@ -299,7 +325,8 @@
     <div id="pantallaDashboard" class="container oculto">
         <button id="btnVolverDeDashboard" class="btn-secundario">← Volver al Panel</button>
         <h2>📊 Rendimiento Global de Alumnos</h2>
-        <p style="color: #64748b; text-align: center;">Métricas netas recolectadas desde la base de datos centralizada.</p>
+        <p style="color: #64748b; text-align: center;">Métricas netas recolectadas desde la base de datos centralizada.
+        </p>
         <table>
             <thead>
                 <tr>
@@ -309,7 +336,7 @@
                 </tr>
             </thead>
             <tbody id="tablaDashboardBody">
-                </tbody>
+            </tbody>
         </table>
     </div>
 
@@ -393,7 +420,7 @@
                 try {
                     await fetch(`${BACKEND_URL}/api/alumno/sincronizar-tiempo`, {
                         method: 'POST',
-                        headers: { 
+                        headers: {
                             'Content-Type': 'application/json',
                             'Authorization': `Bearer ${tokenSesion}`
                         },
@@ -473,10 +500,10 @@
         async function guardarYRefrescarNivel() {
             lblNivel.textContent = `Nivel ${nivelActual} / 10`;
             pizarraTutor.innerHTML = `<p class="loading">🔄 Ajustando nivel de dificultad al Nivel ${nivelActual}...</p>`;
-            
+
             await fetch(`${BACKEND_URL}/api/tutor/guardar-nivel`, {
                 method: 'POST',
-                headers: { 
+                headers: {
                     'Content-Type': 'application/json',
                     'Authorization': `Bearer ${tokenSesion}`
                 },
@@ -493,7 +520,7 @@
             try {
                 const respuesta = await fetch(`${BACKEND_URL}/api/tutor/clase`, {
                     method: 'POST',
-                    headers: { 
+                    headers: {
                         'Content-Type': 'application/json',
                         'Authorization': `Bearer ${tokenSesion}`
                     },
@@ -530,7 +557,7 @@
                             try {
                                 const json = JSON.parse(lineaLimpia.slice(6));
                                 if (json.texto) textoRecibidoCompleto += json.texto;
-                            } catch(e){}
+                            } catch (e) { }
                         }
                     }
                 }
@@ -558,7 +585,7 @@
             try {
                 const respuesta = await fetch(`${BACKEND_URL}/api/tutor/evaluar`, {
                     method: 'POST',
-                    headers: { 
+                    headers: {
                         'Content-Type': 'application/json',
                         'Authorization': `Bearer ${tokenSesion}`
                     },
@@ -623,14 +650,18 @@
 
                     for (const linea of lineas) {
                         const lineaLimpia = linea.trim();
+
+                        // Busca esta sección en la lógica del botón enviar de tu index.html
                         if (lineaLimpia.startsWith('data: ')) {
                             try {
                                 const json = JSON.parse(lineaLimpia.slice(6));
-                                if (json.finControl) datosFinalesControl = json;
-                                else if (json.texto) {
+                                if (json.finControl) {
+                                    datosFinalesControl = json; // Guarda el veredicto para el cierre
+                                } else if (json.texto) {
+                                    // Remueve las etiquetas del renderizado en vivo para que el alumno no las vea feas en texto plano
                                     textoRecibidoCompleto += json.texto.replace(/\[DECISION:[A-Z]+\]/g, '');
                                 }
-                            } catch(e){}
+                            } catch (e) { }
                         }
                     }
                 }
@@ -645,7 +676,7 @@
         btnVerDashboard.addEventListener('click', async () => {
             pantallaPrincipal.classList.add('oculto');
             pantallaDashboard.classList.remove('oculto');
-            
+
             try {
                 const res = await fetch(`${BACKEND_URL}/api/admin/dashboard`);
                 const alumnos = await res.json();
@@ -687,4 +718,5 @@
         });
     </script>
 </body>
+
 </html>
